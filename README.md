@@ -223,4 +223,4 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for architecture notes and guidelines.
 
 ## License
 
-[AGPL v3.0.](./LICENSE)
+[AGPL v3.0](./LICENSE)
