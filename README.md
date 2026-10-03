@@ -1,0 +1,233 @@
+# unAI your project
+
+> Safely remove unnecessary AI-generated comments, explanations, docstrings, and verbose
+> instructional text from your codebase — **without changing the actual source code or
+> project behavior.**
+
+`unai` is a fast, deterministic, privacy-friendly CLI that scans an entire project
+recursively, detects likely AI-generated comments using configurable rules, and removes
+them. It runs **fully locally** — no external API, no AI service, no telemetry.
+
+## Why
+
+AI coding assistants love to leave a trail of comments like:
+
+```ts
+// Certainly! Here's the implementation of the function.
+// This function is used to allow us to compute the result.
+// It first initializes the accumulator, then iterates over the items.
+function total(items) {
+  let sum = 0;
+  for (const item of items) {
+    // Add the current item to the sum.
+    sum += item;
+  }
+  return sum;
+}
+```
+
+The code is fine. The commentary is noise. `unai` strips the noise and keeps what matters:
+your logic, your strings, your formatting, and the human comments that actually explain
+*why*.
+
+## Features
+
+- **Recursive scanning** of an entire project.
+- **Broad language support**: JavaScript, TypeScript, JSX/TSX, Python, Java, C, C++,
+  C#, Go, Rust, PHP, HTML, CSS/SCSS/LESS, JSON/JSONC, YAML, Markdown, and Shell.
+- **Configurable detection** via rules, weights, thresholds, and custom regex patterns.
+- **Protects useful human comments** and required documentation (TODO, FIXME, license
+  headers, lint directives, `@param`, SPDX, and more).
+- **Never touches code**: comments inside strings, template literals, regex literals,
+  and data are left alone. Code logic, variables, functions, imports, strings, and file
+  structure are never modified.
+- **Dry-run by default** — see exactly what would be removed before anything changes.
+- **Automatic timestamped backups** with a one-command `restore`.
+- **Clear removal reports** with score, matched rules, and line numbers.
+- **Sensible ignores**: `.git`, `node_modules`, build folders, binaries, lock files, and
+  any configurable paths.
+- **Deterministic and fast**, with a zero-runtime-dependency footprint.
+
+## Install
+
+```bash
+# from npm (once published)
+npm install -g unai-your-project
+
+# or run locally from source
+git clone https://github.com/<you>/unAI-your-project.git
+cd unAI-your-project
+npm install
+npm run build
+npm link   # exposes the `unai` command
+```
+
+Requires Node.js 18 or newer.
+
+## Usage
+
+```
+unai scan    [path] [options]   Scan and report removable comments (no changes)
+unai clean   [path] [options]   Remove flagged comments (dry-run unless --apply)
+unai restore [path] [options]   Restore files from a backup
+unai backups [path]             List available backups
+```
+
+### Scan
+
+```bash
+unai scan .
+unai scan src --threshold 60
+unai scan . --json > report.json
+```
+
+`scan` never modifies files. Its exit code is `1` when removable comments are found
+(useful for CI), `0` otherwise.
+
+### Clean
+
+```bash
+# preview only (default)
+unai clean .
+
+# actually remove, after reviewing the preview
+unai clean . --apply
+
+# tighten or loosen detection
+unai clean src --threshold 70
+unai clean . --apply --ignore docs --include .ts --include .tsx
+```
+
+Every `clean --apply` creates a timestamped backup under `.unai/backups/<id>/` before
+writing anything, and records the original and cleaned hashes of each file.
+
+### Restore
+
+```bash
+unai backups
+unai restore --id 2026-01-01T10-00-00-000Z
+unai restore                 # latest backup
+unai restore --id <id> --force   # overwrite files edited since cleanup
+```
+
+Restore refuses to clobber a file that changed after the cleanup unless `--force` is
+given, so you can safely keep working after a cleanup.
+
+## Options
+
+| Option | Description |
+| --- | --- |
+| `--apply` | Actually write changes (`clean` defaults to dry-run). |
+| `--dry-run` | Force report-only mode. |
+| `--id <id>` | Backup id to restore (defaults to the latest; prefixes allowed). |
+| `--force` | On restore, overwrite files changed since cleanup. |
+| `--threshold <n>` | Confidence threshold 0–100 (default `45`). |
+| `--ignore <path>` | Additional path to ignore (repeatable). |
+| `--include <ext>` | Only process these extensions, e.g. `.ts` (repeatable). |
+| `--config <file>` | Path to a config file. |
+| `--json` | Emit machine-readable JSON. |
+| `--no-color` | Disable ANSI colors. |
+| `--verbose` | Extra detail. |
+| `--version`, `--help` | Version / help. |
+
+## Configuration
+
+Create `.unairc.json` in your project root (or pass `--config`):
+
+```json
+{
+  "ignore": ["generated", "*.min.js", "migrations"],
+  "include": [".ts", ".tsx", ".js", ".py"],
+  "backupDir": ".unai/backups",
+  "detector": {
+    "threshold": 45,
+    "maxProseWords": 40,
+    "protectPatterns": ["LEGAL", "do not remove"],
+    "disabledRules": ["emoji-decoration"],
+    "rules": [
+      {
+        "name": "our-scaffold-banner",
+        "pattern": "auto-generated by our scaffolding",
+        "weight": 80
+      }
+    ]
+  }
+}
+```
+
+### Built-in detection rules
+
+| Rule | Default weight | Signal |
+| --- | --- | --- |
+| `ai-disclaimer` | 40 | "as an AI", "generated by ChatGPT", etc. |
+| `conversational-opener` | 55 | "Certainly!", "Here is…", "Let me…", "Note that…" |
+| `verbose-explanation` | 50 | "which means…", "allows us to…", "in order to…" |
+| `redundant-obvious` | 48 | "This function…", "Returns the…", "Initialize the…" |
+| `step-narration` | 18 | "Step 1", "First, we…", bulleted walkthroughs |
+| `trivial-docstring` | 50 | Short, generic `"""Module."""` style docstrings |
+| `emoji-decoration` | 14 | Emoji sprinkled in comments |
+| `overly-long-prose` | 14 | Prose comments longer than `maxProseWords` |
+| `excessive-punctuation` | 8 | `!!!`, `— `, trailing `...` |
+
+A comment is removable when its combined score meets or exceeds `threshold` and it is not
+protected. Disable any built-in rule with `disabledRules`, or add your own with `rules`.
+
+### Protected by default
+
+`TODO`, `FIXME`, `HACK`, `XXX`, `NOTE:`, `WARNING`, lint/type directives
+(`eslint-`, `noqa`, `nolint`, `ts-ignore`, `type: ignore`, …), `go:build`, `region`,
+license/`SPDX-License-Identifier`/`Copyright` headers, and JSDoc tags
+(`@param`, `@returns`, `@throws`, `@deprecated`, `@see`, `@example`, …).
+
+## Safety model
+
+`unai` is designed to be boringly safe:
+
+1. **Parse, don't guess.** Comments are extracted with a small language-aware scanner
+   that understands string literals, template literals with `${}` interpolation, escaped
+   quotes, and Rust's nested block comments. If a token might be code, it is not treated
+   as a comment.
+2. **Surgical removal.** Only the exact comment byte ranges are deleted; indentation,
+   line endings (including CRLF), and all remaining characters are preserved.
+3. **Syntax guards.** A Python docstring that is the only statement in a block is kept,
+   because removing it would produce an invalid suite.
+4. **Dry-run default.** `clean` reports before it writes.
+5. **Backups first.** A timestamped copy of every file is stored before modification,
+   with original and cleaned hashes recorded for safe, verified restore.
+
+Always review the dry-run report and run this on a clean git working tree.
+
+## Programmatic API
+
+```ts
+import { scanProject, cleanProject, restoreProject } from 'unai-your-project';
+
+const settings = {
+  root: process.cwd(),
+  ignore: ['node_modules', '.git'],
+  include: [],
+  detector: { threshold: 45 },
+  backupDir: '.unai/backups',
+  color: false,
+  verbose: false,
+};
+
+const summary = scanProject(settings);
+console.log(summary.removableComments);
+```
+
+## Development
+
+```bash
+npm install
+npm run build        # compile to dist/
+npm run typecheck    # tsc --noEmit
+npm test             # vitest
+npm run coverage     # coverage report
+```
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for architecture notes and guidelines.
+
+## License
+
+[MIT](./LICENSE)

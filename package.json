@@ -1,0 +1,60 @@
+{
+  "name": "unai-your-project",
+  "version": "1.0.0",
+  "description": "Safely remove unnecessary AI-generated comments, explanations and docstrings from your codebase without changing behavior.",
+  "license": "MIT",
+  "author": "unAI your project contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/<you>/unAI-your-project.git"
+  },
+  "bugs": {
+    "url": "https://github.com/<you>/unAI-your-project/issues"
+  },
+  "homepage": "https://github.com/<you>/unAI-your-project#readme",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "unai": "dist/cli.js",
+    "unai-your-project": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "cli",
+    "comments",
+    "ai-generated",
+    "cleanup",
+    "docstring",
+    "refactor",
+    "code-quality",
+    "privacy"
+  ],
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}
