@@ -20,7 +20,6 @@ interface CompiledRule {
   test: (body: string) => boolean;
 }
 
-/** Structural rules that operate on the comment body as a whole. */
 function structuralRules(): CompiledRule[] {
   return [
     {
@@ -76,7 +75,6 @@ function structuralRules(): CompiledRule[] {
   ];
 }
 
-/** Weak signal: an unusually long prose comment. */
 function lengthRule(config: DetectorConfig): CompiledRule {
   const maxWords = config.maxProseWords ?? 40;
   return {
@@ -168,12 +166,9 @@ export function detect(
     try {
       if (rule.test(body)) matches.push({ rule: rule.name, weight: rule.weight });
     } catch {
-      // A malformed custom regex must never crash a scan.
     }
   }
 
-  // Trivial docstrings (e.g. `"""Module."""`) carry no information and are a
-  // strong tell of auto-generated documentation.
   if (
     span.kind === 'docstring' &&
     countWords(body) <= 8 &&

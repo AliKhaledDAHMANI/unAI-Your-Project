@@ -82,7 +82,6 @@ export function isIgnored(relativePath: string, ignore: string[]): boolean {
     if (normalized === clean) return true;
     if (normalized.startsWith(clean + '/')) return true;
     if (segments.includes(clean)) return true;
-    // Simple glob support: "build*" or "*.min.js".
     if (clean.includes('*') && globToRegExp(clean).test(normalized)) return true;
   }
   return false;

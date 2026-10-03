@@ -9,7 +9,6 @@ export interface ScanFileInput {
   relativePath: string;
 }
 
-/** Scans a single source string and returns flagged comments. */
 export function scanSource(
   input: ScanFileInput,
   compiled: ReturnType<typeof compileRules>,
@@ -59,7 +58,6 @@ export interface RemoveResult {
   removed: number;
 }
 
-/** Removes the given comment spans from source without touching other bytes. */
 export function removeComments(source: string, spans: CommentSpan[]): RemoveResult {
   const sorted = [...spans].sort((a, b) => a.start - b.start);
   const n = source.length;
@@ -133,11 +131,6 @@ function isShebang(span: CommentSpan): boolean {
   return span.start === 0 && span.text.startsWith('#!');
 }
 
-/**
- * Refuses to remove comments that could change program behavior.
- * Guards Python docstrings that are the only statement in a block, since a
- * suite must contain at least one statement.
- */
 function wouldBreakSyntax(span: CommentSpan, source: string): boolean {
   if (span.kind !== 'docstring') return false;
 
@@ -146,17 +139,13 @@ function wouldBreakSyntax(span: CommentSpan, source: string): boolean {
   const after = source.slice(span.end);
   const sameLineRest = after.slice(0, after.indexOf('\n') === -1 ? after.length : after.indexOf('\n'));
 
-  // Inline suite, e.g. `class A: """doc"""`. Removing is safe only when
-  // another statement follows on the same logical line.
   if (before.trim() !== '') {
     return sameLineRest.replace(/#.*$/, '').trim() === '';
   }
 
   const docIndentCol = indentWidth(before);
-  // Module-level docstrings are always safe to drop: an empty module is valid.
   if (docIndentCol === 0) return false;
 
-  // A suite must not become empty, so keep a lone docstring in a block.
   for (const line of after.split('\n').slice(1)) {
     const trimmed = line.trim();
     if (trimmed === '' || trimmed.startsWith('#')) continue;

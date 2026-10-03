@@ -252,7 +252,6 @@ export function run(argv: string[] = process.argv.slice(2)): number {
   }
 }
 
-/* c8 ignore next 4 */
 if (require.main === module) {
   try {
     process.exitCode = run();

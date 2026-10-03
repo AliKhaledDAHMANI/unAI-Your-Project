@@ -101,8 +101,6 @@ export function cleanProject(
         file.removable.map((c) => ({ start: c.start, end: c.end, kind: c.kind, text: c.text })),
       );
       if (changed.removed === 0) continue;
-      // Safety: verify the cleaned content still parses to the same comment set
-      // minus the removed ones. If the source shrank unexpectedly, skip.
       if (changed.content.length >= original.length) continue;
 
       const record = backupFile(store, settings.root, file.relativePath, original);

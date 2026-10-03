@@ -10,25 +10,17 @@ export interface RuleConfig {
 }
 
 export interface DetectorConfig {
-  /** Score (0-100) at or above which a comment is considered removable. */
   threshold?: number;
-  /** Additional regex rules applied to normalized comment bodies. */
   rules?: RuleConfig[];
-  /** Names of built-in rules to disable. */
   disabledRules?: string[];
-  /** Literal substrings; a comment containing any of these is never removed. */
   protectPatterns?: string[];
-  /** Comments longer than this many words get a weak AI signal. */
   maxProseWords?: number;
 }
 
 export interface UnaiConfig {
-  /** Directory names or glob-like paths to ignore. */
   ignore?: string[];
-  /** File extensions to include, e.g. [".ts", ".py"]. Defaults to all supported. */
   include?: string[];
   detector?: DetectorConfig;
-  /** Directory (relative to root) where backups are stored. */
   backupDir?: string;
 }
 

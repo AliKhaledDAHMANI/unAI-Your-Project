@@ -30,10 +30,6 @@ export function initBackup(root: string, backupDir: string, now?: Date): BackupS
   return { id, dir };
 }
 
-/**
- * Copies an original file into the backup store, preserving its relative
- * directory structure so `restore` can put it back exactly.
- */
 export function backupFile(
   store: BackupStore,
   root: string,
@@ -67,7 +63,6 @@ export function listBackups(root: string, backupDir: string): BackupManifest[] {
     try {
       manifests.push(JSON.parse(readFileSync(manifestPath, 'utf8')) as BackupManifest);
     } catch {
-      // ignore corrupt manifests
     }
   }
   return manifests;
@@ -105,7 +100,6 @@ export function restoreManifest(
 
     if (!force && existsSync(target)) {
       const currentHash = hashContent(readFileSync(target, 'utf8'));
-      // Already the original, or edited by the user since cleanup: leave it.
       if (currentHash === record.originalHash) continue;
       if (record.cleanedHash && currentHash !== record.cleanedHash) {
         throw new Error(

@@ -1,19 +1,11 @@
 import type { CommentSpan } from './types';
 import type { LanguageSpec } from './languages';
 
-/**
- * Extracts comments from source text while respecting string literals.
- *
- * The parser is deliberately conservative: when it cannot be sure whether a
- * token starts a comment, it prefers to skip it rather than risk treating code
- * as a comment. This guarantees the cleaner never deletes real source.
- */
 export function extractComments(source: string, spec: LanguageSpec): CommentSpan[] {
   const comments: CommentSpan[] = [];
   const n = source.length;
   let i = 0;
 
-  // Python cannot have `//`, so line prefixes are checked per language.
   const linePrefixes = dedupeByLength(spec.lineComment);
   const blockStarts = dedupeByLength(spec.blockComment.map((b) => b.open));
 
@@ -23,7 +15,6 @@ export function extractComments(source: string, spec: LanguageSpec): CommentSpan
   while (i < n) {
     const ch = source[i];
 
-    // --- Python triple-quoted docstrings (checked before strings) --------
     if (docstringEnabled && (ch === '"' || ch === "'")) {
       const triple = ch.repeat(3);
       if (source.startsWith(triple, i) && isDocstringPosition(source, i)) {
@@ -35,13 +26,11 @@ export function extractComments(source: string, spec: LanguageSpec): CommentSpan
       }
     }
 
-    // --- String literals -------------------------------------------------
     if (isStringDelimiter(ch, spec)) {
       i = skipString(source, i, ch, hasJsTemplate, docstringEnabled);
       continue;
     }
 
-    // --- Block comments --------------------------------------------------
     const block = matchPrefix(source, i, blockStarts);
     if (block) {
       const syntax = spec.blockComment.find((b) => b.open === block)!;
@@ -51,7 +40,6 @@ export function extractComments(source: string, spec: LanguageSpec): CommentSpan
       continue;
     }
 
-    // --- Line comments ---------------------------------------------------
     const line = matchPrefix(source, i, linePrefixes);
     if (line) {
       let end = i + line.length;
@@ -71,11 +59,6 @@ function isStringDelimiter(ch: string, spec: LanguageSpec): boolean {
   return spec.stringDelimiters.includes(ch);
 }
 
-/**
- * Heuristic: a triple-quoted string is a docstring only when it is the first
- * statement on its logical line (ignoring indentation and a leading `r`/`b`
- * style prefix). Free-standing triple strings used as data are left untouched.
- */
 function isDocstringPosition(source: string, quoteStart: number): boolean {
   let i = quoteStart - 1;
   while (i >= 0 && (source[i] === ' ' || source[i] === '\t')) i--;
@@ -108,7 +91,6 @@ function skipString(
       continue;
     }
     if (ch === quote) return i + 1;
-    // A newline ends a normal (non-template) string; treat as unterminated.
     if (ch === '\n' && quote !== '`' && !isMultilineAllowed(source, start)) return i;
     i++;
   }
@@ -116,7 +98,6 @@ function skipString(
 }
 
 function isMultilineAllowed(_source: string, _start: number): boolean {
-  // Conservative: non-template strings are assumed single-line.
   return false;
 }
 
@@ -196,10 +177,6 @@ function dedupeByLength(values: string[]): string[] {
   return [...new Set(values)].sort((a, b) => b.length - a.length);
 }
 
-/**
- * Produces the normalized comment body used by the detector: delimiters and
- * decorative characters are stripped, whitespace collapsed.
- */
 export function normalizeCommentBody(span: CommentSpan, spec: LanguageSpec): string {
   let text = span.text;
 

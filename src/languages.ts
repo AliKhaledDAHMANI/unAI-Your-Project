@@ -7,15 +7,11 @@ export interface BlockSyntax {
 export interface LanguageSpec {
   id: string;
   extensions: string[];
-  /** Alternative file names without extension, e.g. shell scripts. */
   filenames?: string[];
   lineComment: string[];
   blockComment: BlockSyntax[];
-  /** Characters that open a string literal. */
   stringDelimiters: string[];
-  /** Enable Python-style triple-quoted docstring detection. */
   docstrings?: boolean;
-  /** JSON is strict by default; only scan comments when explicitly enabled. */
   supportsComments?: boolean;
 }
 
