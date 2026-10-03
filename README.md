@@ -55,7 +55,7 @@ your logic, your strings, your formatting, and the human comments that actually 
 npm install -g unai-your-project
 
 # or run locally from source
-git clone https://github.com/<you>/unAI-your-project.git
+git clone https://github.com/AliKhaledDAHMANI/unAI-Your-Project.git
 cd unAI-your-project
 npm install
 npm run build
