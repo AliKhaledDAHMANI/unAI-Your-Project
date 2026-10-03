@@ -51,10 +51,6 @@ your logic, your strings, your formatting, and the human comments that actually 
 ## Install
 
 ```bash
-# from npm (once published)
-npm install -g unai-your-project
-
-# or run locally from source
 git clone https://github.com/AliKhaledDAHMANI/unAI-Your-Project.git
 cd unAI-your-project
 npm install
@@ -87,13 +83,10 @@ unai scan . --json > report.json
 ### Clean
 
 ```bash
-# preview only (default)
 unai clean .
 
-# actually remove, after reviewing the preview
 unai clean . --apply
 
-# tighten or loosen detection
 unai clean src --threshold 70
 unai clean . --apply --ignore docs --include .ts --include .tsx
 ```
@@ -220,10 +213,10 @@ console.log(summary.removableComments);
 
 ```bash
 npm install
-npm run build        # compile to dist/
-npm run typecheck    # tsc --noEmit
-npm test             # vitest
-npm run coverage     # coverage report
+npm run build
+npm run typecheck
+npm test
+npm run coverage
 ```
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for architecture notes and guidelines.
