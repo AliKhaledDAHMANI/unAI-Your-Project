@@ -1,12 +1,12 @@
 # unAI your project
 
 > Safely remove unnecessary AI-generated comments, explanations, docstrings, and verbose
-> instructional text from your codebase — **without changing the actual source code or
+> instructional text from your codebase **without changing the actual source code or
 > project behavior.**
 
 `unai` is a fast, deterministic, privacy-friendly CLI that scans an entire project
 recursively, detects likely AI-generated comments using configurable rules, and removes
-them. It runs **fully locally** — no external API, no AI service, no telemetry.
+them. It runs **fully locally** no external API, no AI service, no telemetry.
 
 ## Why
 
